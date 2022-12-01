@@ -1,6 +1,8 @@
 from firebase_admin import credentials, initialize_app, auth, firestore
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Flask, jsonify, request, make_response, Response, abort
+from flask_cors import CORS, cross_origin
+import sys
+import json
 
 from utils.dbUtils import dbCollectionToSerializable, dbItemToSerializable
 
@@ -16,6 +18,11 @@ defaultApp = initialize_app(cred)
 
 app = createApp()
 CORS(app)
+# CORS(app, resources={r"/*": {"origins": "*"}})
+
+# app.config['CORS_HEADERS'] = 'Content-Type'
+
+# https://stackoverflow.com/questions/39550920/flask-cors-not-working-for-post-but-working-for-get/57735363#57735363
 
 
 # AUH USERS
@@ -37,6 +44,34 @@ def getAuthUser(uid):
   response = jsonify(user)
 
   return response
+
+
+@app.route('/api/firebase-admin/auth/user/add', methods=['POST'])
+def addAuthUser():
+  authUser = request.json
+
+  try:
+    dbData = auth.create_user(email=authUser['email'], password=authUser['password'])
+  except Exception as error:
+    return Response(f'"{error}"', status=502, mimetype='application/json')
+
+  newAuthUser = dbItemToSerializable(dbData, keepUID=True)
+
+  return Response(json.dumps(newAuthUser), mimetype='application/json')
+
+@app.route('/api/firebase-admin/auth/user/delete', methods=['POST'])
+def deleteAuthUser():
+  if request.method != 'POST':
+    abort()
+
+  authUserUID = request.json
+
+  try:
+    auth.delete_user(authUserUID)
+  except Exception as error:
+    return Response(f'"{error}"', status=502, mimetype='application/json')
+
+  return Response(f'{{"authUserDeletedUID": "{authUserUID}"}}', mimetype='application/json')
 
 
 # USERS
