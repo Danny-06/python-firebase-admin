@@ -54,7 +54,7 @@ def addAuthUser():
   try:
     dbData = auth.create_user(email=authUserForm['email'], password=authUserForm['password'])
   except Exception as error:
-    return Response(f'"{error}"', status=502, mimetype='application/json')
+    return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   newAuthUser = dbItemToSerializable(dbData, keepUID=True)
 
@@ -73,7 +73,7 @@ def updateAuthUser():
   try:
     dbData = auth.update_user(authUserUID, email=authUserForm['email'], password=authUserForm['password'])
   except Exception as error:
-    return Response(f'"{error}"', status=502, mimetype='application/json')
+    return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   updatedAuthUser = dbItemToSerializable(dbData, keepUID=True)
 
@@ -90,7 +90,7 @@ def deleteAuthUser():
   try:
     auth.delete_user(authUserUID)
   except Exception as error:
-    return Response(f'"{error}"', status=502, mimetype='application/json')
+    return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   return Response(f'{{"authUserDeletedUID": "{authUserUID}"}}', mimetype='application/json')
 
