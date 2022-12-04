@@ -54,6 +54,7 @@ def addAuthUser():
   try:
     dbData = auth.create_user(email=authUserForm['email'], password=authUserForm['password'])
   except Exception as error:
+    print(error)
     return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   newAuthUser = dbItemToSerializable(dbData, keepUID=True)
@@ -63,16 +64,18 @@ def addAuthUser():
 
 @app.route('/api/firebase-admin/auth/user/update', methods=['POST'])
 def updateAuthUser():
-  if request.method != 'POST':
-    abort()
-
   authUserForm = request.json
 
   authUserUID = authUserForm['uid']
 
   try:
-    dbData = auth.update_user(authUserUID, email=authUserForm['email'], password=authUserForm['password'])
+    password = authUserForm['password']
+    if password == '':
+      password = None
+
+    dbData = auth.update_user(authUserUID, email=authUserForm['email'], password=password)
   except Exception as error:
+    print(error)
     return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   updatedAuthUser = dbItemToSerializable(dbData, keepUID=True)
@@ -82,14 +85,12 @@ def updateAuthUser():
 
 @app.route('/api/firebase-admin/auth/user/delete', methods=['POST'])
 def deleteAuthUser():
-  # if request.method != 'POST':
-  #   abort()
-
   authUserUID = request.json
 
   try:
     auth.delete_user(authUserUID)
   except Exception as error:
+    print(error)
     return Response(json.dumps(str(error)), status=502, mimetype='application/json')
 
   return Response(f'{{"authUserDeletedUID": "{authUserUID}"}}', mimetype='application/json')
